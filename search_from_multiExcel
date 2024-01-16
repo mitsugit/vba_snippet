@@ -61,6 +61,7 @@ Sub SearchKeywordInAllWorkbooks()
             Next cell
         Next ws
         wb.Close False
+　　　　 'Dir(folderPath & "*.xls*")と同じ検索パターンに一致する次のファイル名を取得
         fileName = Dir()
     Loop
 
