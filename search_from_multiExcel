@@ -1,0 +1,69 @@
+Sub SearchKeywordInAllWorkbooks()
+    Dim folderPath As String
+    Dim fileName As String
+    Dim wb As Workbook
+    Dim ws As Worksheet
+    Dim cell As Range
+    Dim outputRow As Long
+    Dim keyword As String
+
+    ' キーワードをシートのセルから読み込む（ここではSheet1のA1セルを使用）
+    keyword = ThisWorkbook.Sheets("Output").Cells(1, 2).Value
+
+    ' 検索するフォルダのパスを設定
+    ' folderPath = "C:\Users\addre\dev\vba_test\search_target\" ' ここに検索するフォルダのパスを入力
+    
+    MsgBox "対象のディレクトリを選択してください。", vbInformation, "ディレクトリ選択"
+    ' フォルダ選択ダイアログを開く
+    Set fd = Application.FileDialog(msoFileDialogFolderPicker)
+    ' ダイアログのタイトルを設定
+    fd.Title = "対象のディレクトリを選択してください。"
+    
+    If fd.Show = -1 Then
+        folderPath = fd.SelectedItems(1) & "\"
+    Else
+        ' ユーザーがキャンセルした場合
+        MsgBox "フォルダが選択されませんでした。"
+        Exit Sub
+    End If
+    Set fd = Nothing
+
+    ' 出力先シートの初期設定
+    outputRow = 5
+    '出力内容をクリア
+    With ThisWorkbook.Sheets("Output")
+        .Range(.Cells(5, 1), .Cells(.Rows.Count, .Columns.Count)).Clear
+    End With
+    
+    'タイトル出力
+    Sheets("Output").Cells(4, 1).Value = "ファイル名"
+    Sheets("Output").Cells(4, 2).Value = "シート名"
+    Sheets("Output").Cells(4, 3).Value = "行番号"
+    Sheets("Output").Cells(4, 4).Value = "セル内容"
+
+    ' フォルダ内の全てのExcelファイルを走査
+    fileName = Dir(folderPath & "*.xls*")
+    
+    Do While fileName <> ""
+        Set wb = Workbooks.Open(folderPath & fileName)
+        For Each ws In wb.Sheets
+            For Each cell In ws.UsedRange
+                If InStr(cell.Value, keyword) > 0 Then
+                    ' キーワードが見つかった場合、情報を出力シートに記録
+                    With ThisWorkbook.Sheets("Output")
+                        .Cells(outputRow, 1).Value = fileName
+                        .Cells(outputRow, 2).Value = ws.Name
+                        .Cells(outputRow, 3).Value = cell.Row
+                        .Cells(outputRow, 4).Value = cell.Value ' セルの内容を出力
+                    End With
+                    outputRow = outputRow + 1
+                End If
+            Next cell
+        Next ws
+        wb.Close False
+        fileName = Dir()
+    Loop
+
+    MsgBox "検索完了"
+End Sub
+
